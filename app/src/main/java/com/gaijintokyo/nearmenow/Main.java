@@ -7,8 +7,11 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,7 +81,8 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-
+        mListView.setAdapter(null);
+        new Load().execute();
     }
 
     public void exploreFoursquare() throws IOException, JSONException {
@@ -99,8 +103,12 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
             JSONArray groups    = jsonObj.getJSONObject("response").getJSONArray("groups");
             JSONObject objGroup = groups.getJSONObject(0);
             JSONArray items = objGroup.getJSONArray("items");
-            JSONObject objItem = items.getJSONObject(0);
-            JSONObject objVenue = objItem.getJSONObject("venue");
+            mVenueList = new ArrayList<String>(items.length());
+            for (int i = 0; i < items.length(); i++){
+                JSONObject objItem = items.getJSONObject(i);
+                JSONObject objVenue = objItem.getJSONObject("venue");
+                mVenueList.add(i, objVenue.getString("name"));
+            }
 
         } else {
             Toast.makeText(this, "error", Toast.LENGTH_SHORT);
@@ -124,7 +132,8 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(Main.this, android.R.layout.simple_list_item_1, mVenueList);
+            mListView.setAdapter(adapter);
         }
     }
 }
