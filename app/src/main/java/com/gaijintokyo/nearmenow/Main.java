@@ -37,6 +37,7 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
     ListView mListView;
     TextView tvLong, tvLat;
     ArrayList<String> mVenueList;
+    ArrayList<Venue> mVenueList2;
 
     final static String URL = "https://api.foursquare.com/v2/venues/explore?";
     final static String CLIENT_ID = "4K213ITDZ20HNGIZDOR2GMO1IC20OV0DRIOY5KO41MVE3KGP";
@@ -91,7 +92,7 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
         url.append("&client_secret=" + CLIENT_SECRET);
         url.append("&v=20141219");
         url.append("&section=food");
-        url.append("&ll=35,139");
+        url.append("&ll=35.631129,139.744099");
 
         HttpGet get = new HttpGet(url.toString());
         HttpResponse r = mClient.execute(get);
@@ -103,11 +104,21 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
             JSONArray groups    = jsonObj.getJSONObject("response").getJSONArray("groups");
             JSONObject objGroup = groups.getJSONObject(0);
             JSONArray items = objGroup.getJSONArray("items");
+
             mVenueList = new ArrayList<String>(items.length());
+            mVenueList2 = new ArrayList<Venue>(items.length());
             for (int i = 0; i < items.length(); i++){
+                Venue venue = new Venue();
                 JSONObject objItem = items.getJSONObject(i);
                 JSONObject objVenue = objItem.getJSONObject("venue");
                 mVenueList.add(i, objVenue.getString("name"));
+                venue.mName = objVenue.getString("name");
+                //rating not available for some venues
+                if (objVenue.has("rating")) {
+                    venue.mRating = venue.mRating + objVenue.getString("rating");
+                }
+                venue.mCheckins = venue.mCheckins + objVenue.getJSONObject("stats").getString("checkinsCount");
+                mVenueList2.add(i, venue);
             }
 
         } else {
@@ -133,7 +144,9 @@ public class Main extends ActionBarActivity implements View.OnClickListener {
         @Override
         protected void onPostExecute(Void aVoid) {
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(Main.this, android.R.layout.simple_list_item_1, mVenueList);
-            mListView.setAdapter(adapter);
+            VenueAdapter vAdapter = new VenueAdapter(Main.this, mVenueList2);
+            //mListView.setAdapter(adapter);
+            mListView.setAdapter(vAdapter);
         }
     }
 }
